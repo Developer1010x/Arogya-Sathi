@@ -87,3 +87,41 @@ git clone https://github.com/your-repo/arogya-sathi.git
 cd arogyasathi
 pip install -r requirements.txt
 streamlit run app.py
+```
+
+
+-##🤝 Creators
+
+
+-** [S Prajwall Narayana](https://github.com/Developer1010x)
+-** [Smit_Patel](https://github.com/smitpatel0x9)
+
+
+---
+
+## 🤝 Creators
+
+- [S Prajwall Narayana](https://github.com/Developer1010x)  
+- [Smit_Patel](https://github.com/smitpatel0x9)
+
+---
+
+## 🤝 Contribution
+
+Contributions are welcome! Please open an issue or submit a pull request for any improvements, suggestions, or bug fixes.
+
+> **Note:**  
+> This project was developed and tested on a variety of systems, including MacBooks (Intel i5 and Apple M4) and Microsoft Surface devices running Ubuntu. Most packages used are compatible across these platforms.  
+> 
+> - Python 3.12 and 3.13 are supported.
+> - Refer to the `req_txt/` folder for specific package requirements.
+> - The application is designed with cross-platform compatibility in mind.
+> 
+> ⚠️ Please avoid committing all changes directly to the `main` branch. Use feature branches and pull requests for collaborative development.
+
+---
+
+## 🙏 Acknowledgments
+
+Special thanks to the creators and communities behind:  
+LLaMA, Ollama, YOLOv8, Streamlit, Tesseract, OpenStreetMap, HuggingFace, and all open-source contributors who make innovation like this possible.
