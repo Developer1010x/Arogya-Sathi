@@ -90,12 +90,6 @@ streamlit run app.py
 ```
 
 
--##🤝 Creators
-
-
->[S Prajwall Narayana](https://github.com/Developer1010x)
->[Smit_Patel](https://github.com/smitpatel0x9)
-
 
 ---
 
