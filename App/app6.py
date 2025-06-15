@@ -7,7 +7,7 @@ st.set_page_config(page_title="Mental Health Companion", page_icon="🧠", layou
 st.title("🧘‍♂️ Mental Health Companion")
 st.markdown("Chat with your friendly mental wellness bot to get emotional support, mindfulness tips, or simply a space to talk.")
 
-st.info("💡 This bot is not a substitute for professional mental health care.")
+st.info("💡 This bot is under testing and it cant  substitute for professional mental health care under testing")
 
 # Mood check-in
 mood = st.selectbox("How are you feeling today?", ["😊 Happy", "😔 Sad", "😠 Angry", "😨 Anxious", "😴 Tired", "😐 Neutral"])

@@ -343,7 +343,7 @@ def main():
             - Providing dosage information
             - Generating observation notes
             
-            Please note: This is for assistance only. Always rely on your professional judgment and medical knowledge for final decisions.
+            Please note: This is for assistance only. and under testing in current 
             """)
         
         query_type = st.selectbox("What would you like help with?", [

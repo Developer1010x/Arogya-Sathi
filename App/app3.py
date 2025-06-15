@@ -128,8 +128,8 @@ with st.sidebar:
 
     **Note:**
     - These are AI-generated suggestions
-    - Consult a professional before making changes
-    - This is not medical advice
+    - This is under testing please proceed with cation
+    - This is not perfect medical advice
     """))
     st.markdown("---")
     st.markdown(_("### How it works"))

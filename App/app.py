@@ -162,7 +162,7 @@ elif option == "🤒 Symptom Checker":
     st.markdown(description_text)
     
     # Disclaimer about medical advice
-    disclaimer_text = translate_text("⚠️ **Note:** This is not a substitute for professional medical advice. Always consult with a healthcare provider for diagnosis and treatment.", interface_lang_code) if interface_language != "English" else "⚠️ **Note:** This is not a substitute for professional medical advice. Always consult with a healthcare provider for diagnosis and treatment."
+    disclaimer_text = translate_text("⚠️ **Note:** This is under testing please proceed with cation", interface_lang_code) if interface_language != "English" else "⚠️ **Note:** This is under testing please proceed with cation"
     st.markdown(disclaimer_text)
     
     # Input section with example
@@ -295,7 +295,7 @@ elif option == "🧠 Deep Symptom Analysis":
     st.markdown(description_text)
     
     # Disclaimer about medical advice
-    disclaimer_text = translate_text("⚠️ **Note:** This is not a substitute for professional medical advice. Always consult with a healthcare provider for diagnosis and treatment.", interface_lang_code) if interface_language != "English" else "⚠️ **Note:** This is not a substitute for professional medical advice. Always consult with a healthcare provider for diagnosis and treatment."
+    disclaimer_text = translate_text("⚠️ **Note:** This is under testing please proceed with cation.", interface_lang_code) if interface_language != "English" else "⚠️ **Note:** This is under testing please proceed with cation"
     st.markdown(disclaimer_text)
     
     # Initialize session state for patient data
