@@ -11,15 +11,187 @@ import subprocess
 import socket
 import json
 import tempfile
-
+from datetime import datetime
 
 # --- Config ---
-st.set_page_config(page_title="LLM Local Health AI", layout="wide")
-st.title("🩺 Local Health Assistant")
+st.set_page_config(page_title="Arogya-Sathi", layout="wide", page_icon="🩺")
 
-# --- Supported languages for Google Translate and gTTS ---
-available_languages = {
-    "English": "en","Spanish": "es","French": "fr","Hindi": "hi","Tamil": "ta","Telugu": "te","Mandarin": "zh-cn","German": "de","Italian": "it","Portuguese": "pt","Arabic": "ar","Bengali": "bn","Russian": "ru","Japanese": "ja","Korean": "ko","Dutch": "nl","Turkish": "tr","Greek": "el","Swedish": "sv","Polish": "pl","Ukrainian": "uk","Punjabi": "pa","Marathi": "mr","Gujarati": "gu","Malayalam": "ml","Kannada": "kn","Hebrew": "he","Thai": "th","Vietnamese": "vi","Indonesian": "id","Swahili": "sw","Filipino": "tl",
+# --- Custom CSS for Gradient Background and Interactive UI ---
+st.markdown("""
+<style>
+    /* Main gradient background */
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(135deg, #32343b 0%, #0f172a 100%);
+        color: white;
+    }
+    
+    /* Language selector in corner */
+    .language-corner {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: rgba(30, 58, 138, 0.9);
+        border-radius: 50px;
+        padding: 10px 15px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .language-corner:hover {
+        background: rgba(30, 58, 138, 1);
+        transform: scale(1.05);
+    }
+    
+    .language-toggle {
+        color: white;
+        font-size: 1.2rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .language-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: rgba(30, 58, 138, 0.95);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 10px;
+        min-width: 200px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        display: none;
+    }
+    
+    .language-dropdown.show {
+        display: block;
+    }
+    
+    /* Interactive card styling */
+    .feature-card {
+        background: linear-gradient(135deg, #dc2626 0%, #1d4ed8 50%, #059669 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 10px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        transition: all 0.3s ease;
+        border-left: 5px solid #ff6600;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.6);
+        background: linear-gradient(135deg, #ef4444 0%, #3b82f6 50%, #10b981 100%);
+    }
+    
+    .feature-card h3 {
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        margin-bottom: 10px;
+    }
+    
+    .feature-card p {
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    /* Welcome header */
+    .welcome-header {
+    font-size: 3.5rem;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    margin-top: 60px;
+    }
+    
+    /* Compact continue button */
+    .continue-button {
+        background: linear-gradient(135deg, #ff6600 0%, #ffffff 35%, #059669 100%);
+        border-radius: 25px;
+        padding: 15px 40px;
+        margin: 30px auto;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        transition: all 0.3s ease;
+        border: 2px solid #1d4ed8;
+        color: #1e3a8a;
+        font-weight: bold;
+        font-size: 1.2rem;
+        text-align: center;
+        cursor: pointer;
+        text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        display: inline-block;
+        max-width: 200px;
+    }
+    
+    .continue-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        background: linear-gradient(135deg, #ff8533 0%, #f0f0f0 35%, #10b981 100%);
+    }
+    
+    .continue-container {
+        text-align: center;
+        margin-top: 40px;
+    }
+    
+    /* Override Streamlit default text colors */
+    .stMarkdown, .stText, p {
+        color: white !important;
+    }
+    
+    /* Make section headers visible */
+    h1, h2, h3, h4, h5, h6 {
+        color: white !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    
+    /* Hide Streamlit header */
+    header[data-testid="stHeader"] {
+        display: none;
+    }
+</style>
+
+<script>
+function toggleLanguageDropdown() {
+    const dropdown = document.querySelector('.language-dropdown');
+    dropdown.classList.toggle('show');
+}
+
+document.addEventListener('click', function(event) {
+    const dropdown = document.querySelector('.language-dropdown');
+    const toggle = document.querySelector('.language-corner');
+    
+    if (!toggle.contains(event.target)) {
+        dropdown.classList.remove('show');
+    }
+});
+</script>
+""", unsafe_allow_html=True)
+
+# --- Supported languages ---
+indian_languages = {
+    "English": "en",
+    "हिंदी (Hindi)": "hi",
+    "தமிழ் (Tamil)": "ta",
+    "తెలుగు (Telugu)": "te",
+    "বাংলা (Bengali)": "bn",
+    "मराठी (Marathi)": "mr",
+    "ગુજરાતી (Gujarati)": "gu",
+    "ಕನ್ನಡ (Kannada)": "kn",
+    "മലയാളം (Malayalam)": "ml",
+    "ਪੰਜਾਬੀ (Punjabi)": "pa",
+    "ଓଡ଼ିଆ (Odia)": "or",
+    "অসমীয়া (Assamese)": "as"
 }
 
 # --- Helper Functions ---
@@ -42,33 +214,143 @@ def text_to_speech(text, lang_code):
     except Exception as e:
         st.error(f"Text-to-speech error: {e}")
         return None
-# --- Sidebar ---
-st.sidebar.title("🩺 Local Health Assistant")
 
-# --- Health Tools Section ---
-st.sidebar.subheader("📋 Health Tools")
-option = st.sidebar.radio("Choose a feature", [
-    "🏠 Home",
-    "📝 Health Report Summary",
-    "❓ Ask a Doctor",
-    "🤒 Symptom Checker",
-    "🧠 Deep Symptom Analysis",
-    "💊 Buy Medicine Online",
-    "🏥 Find Clinics & Pharmacies"
-])
+# --- Home Page ---
+def show_home():
+    # Language selector in corner
+    if 'selected_language' not in st.session_state:
+        st.session_state.selected_language = "English"
+    
+    # Create columns for language selector positioning
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col3:
+        selected_lang = st.selectbox(
+            "🌐",
+            list(indian_languages.keys()),
+            index=list(indian_languages.keys()).index(st.session_state.selected_language),
+            key="lang_selector",
+            help="Choose your language"
+        )
+        st.session_state.selected_language = selected_lang
+        lang_code = indian_languages[selected_lang]
+    
+    # Welcome header
+    st.markdown('<h1 class="welcome-header">Welcome to Arogya-Sathi</h1>', unsafe_allow_html=True)
+    
+    # Translated welcome message
+    welcome_text = translate_text("Your personal health companion for all medical needs", lang_code)
+    st.markdown(f'<p style="text-align:center; font-size:1.5rem; color:#ffffff; margin-bottom: 40px;">{welcome_text}</p>', unsafe_allow_html=True)
+    
+    # Feature cards
+    health_tools_text = translate_text("Health Tools", lang_code)
+    st.markdown(f"## 🛠 {health_tools_text}")
+    
+    cols = st.columns(3)
+    
+    with cols[0]:
+        card_title = translate_text("Health Report", lang_code)
+        card_desc = translate_text("Upload and analyze medical reports with AI", lang_code)
+        st.markdown(f"""
+        <div class="feature-card">
+            <h3>📝 {card_title}</h3>
+            <p>{card_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with cols[1]:
+        card_title = translate_text("Ask a Doctor", lang_code)
+        card_desc = translate_text("Get answers to your medical questions", lang_code)
+        st.markdown(f"""
+        <div class="feature-card">
+            <h3>❓ {card_title}</h3>
+            <p>{card_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with cols[2]:
+        card_title = translate_text("Symptom Checker", lang_code)
+        card_desc = translate_text("Comprehensive symptom analysis", lang_code)
+        st.markdown(f"""
+        <div class="feature-card">
+            <h3>🤒 {card_title}</h3>
+            <p>{card_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    cols = st.columns(3)
+    with cols[0]:
+        card_title = translate_text("Deep Analysis", lang_code)
+        card_desc = translate_text("Detailed medical interview", lang_code)
+        st.markdown(f"""
+        <div class="feature-card">
+            <h3>🧠 {card_title}</h3>
+            <p>{card_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with cols[1]:
+        card_title = translate_text("Buy Medicine", lang_code)
+        card_desc = translate_text("Search and purchase medicines", lang_code)
+        st.markdown(f"""
+        <div class="feature-card">
+            <h3>💊 {card_title}</h3>
+            <p>{card_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with cols[2]:
+        card_title = translate_text("Find Clinics", lang_code)
+        card_desc = translate_text("Locate nearby healthcare providers", lang_code)
+        st.markdown(f"""
+        <div class="feature-card">
+            <h3>🏥 {card_title}</h3>
+            <p>{card_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Compact continue button
+    st.markdown('<div class="continue-container">', unsafe_allow_html=True)
+    continue_text = translate_text("Continue", lang_code)
+    
+    if st.button(continue_text, key="continue_btn", help="Start using Arogya-Sathi"):
+        st.session_state.show_home = False
+        st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Divider ---
-st.sidebar.markdown("---")
+# --- Main App Logic ---
+if 'show_home' not in st.session_state:
+    st.session_state.show_home = True
+    st.session_state.lang_code = "en"  # Default to English
 
+# Initialize option variable
+option = None
+interface_lang_code = "en"  # Default language code
 
-
-
-# --- Language Settings Section ---
-st.sidebar.subheader("🌐 Language Settings")
-interface_language = st.sidebar.selectbox("Choose Language", list(available_languages.keys()), index=0)
-interface_lang_code = available_languages[interface_language]
-enable_tts = st.sidebar.checkbox("🔊 Enable Text-to-Speech", value=False)
-
+if st.session_state.show_home:
+    show_home()
+else:
+    # Language settings in sidebar
+    st.sidebar.title("🌐 Language Settings")
+    interface_language = st.sidebar.selectbox("Choose Language", list(indian_languages.keys()), index=0)
+    interface_lang_code = indian_languages[interface_language]
+    enable_tts = st.sidebar.checkbox("🔊 Enable Text-to-Speech", value=False)
+    
+    # Navigation options in sidebar
+    st.sidebar.title("🩺 Health Tools")
+    option = st.sidebar.selectbox(
+        "Choose a tool:",
+        [
+            "📝 Health Report Summary",
+            "❓ Ask a Doctor",
+            "🤒 Symptom Checker",
+            "🧠 Deep Analysis",
+            "💊 Buy Medicine",
+            "🏥 Find Clinics & Pharmacies",
+            "🏠 Home"
+        ]
+    )
 # --- OCR and Summarize ---
 if option == "📝 Health Report Summary":
     # Translate section headers based on selected language
@@ -286,7 +568,7 @@ elif option == "🤒 Symptom Checker":
 
 
 
-elif option == "🧠 Deep Symptom Analysis":
+elif option == "🧠 Deep Analysis":
     header_text = translate_text("🧪 Advanced Symptom Checker - Comprehensive Medical Interview", interface_lang_code) if interface_language != "English" else "🧪 Advanced Symptom Checker - Comprehensive Medical Interview"
     st.header(header_text)
     
@@ -851,7 +1133,7 @@ Always consult with qualified healthcare professionals for diagnosis and treatme
         st.session_state.interview_complete = True
                                                     
 # --- Buy Medicine via LLM + Purchase Link (using Google search) ---
-elif option == "💊 Buy Medicine Online":
+elif option == "💊 Buy Medicine":
     header_text = translate_text("🛒 Search Medicine and Purchase", interface_lang_code) if interface_language != "English" else "🛒 Search Medicine and Purchase"
     st.header(header_text)
     
