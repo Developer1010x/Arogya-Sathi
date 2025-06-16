@@ -128,7 +128,7 @@ with st.sidebar:
 
     **Note:**
     - These are AI-generated suggestions
-    - This is under testing please proceed with cation
+    - This is under testing please proceed with caution
     - This is not perfect medical advice
     """))
     st.markdown("---")

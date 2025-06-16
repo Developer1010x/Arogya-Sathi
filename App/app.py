@@ -239,12 +239,12 @@ def show_home():
     st.markdown('<h1 class="welcome-header">Welcome to Arogya-Sathi</h1>', unsafe_allow_html=True)
     
     # Translated welcome message
-    welcome_text = translate_text("Your personal health companion for all medical needs", lang_code)
+    welcome_text = translate_text("Holistic Health Care Using AI", lang_code)
     st.markdown(f'<p style="text-align:center; font-size:1.5rem; color:#ffffff; margin-bottom: 40px;">{welcome_text}</p>', unsafe_allow_html=True)
     
     # Feature cards
     health_tools_text = translate_text("Health Tools", lang_code)
-    st.markdown(f"## 🛠 {health_tools_text}")
+    st.markdown(f"## 🌐 {'Our Apps'}")
     
     cols = st.columns(3)
     
