@@ -19,146 +19,138 @@ st.set_page_config(page_title="Arogya-Sathi", layout="wide", page_icon="🩺")
 # --- Custom CSS for Gradient Background and Interactive UI ---
 st.markdown("""
 <style>
-    /* Main gradient background */
-    [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #32343b 0%, #0f172a 100%);
-        color: white;
-    }
-    
-    /* Language selector in corner */
-    .language-corner {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        background: rgba(30, 58, 138, 0.9);
-        border-radius: 50px;
-        padding: 10px 15px;
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .language-corner:hover {
-        background: rgba(30, 58, 138, 1);
-        transform: scale(1.05);
-    }
-    
-    .language-toggle {
-        color: white;
-        font-size: 1.2rem;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .language-dropdown {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background: rgba(30, 58, 138, 0.95);
-        border-radius: 10px;
-        padding: 15px;
-        margin-top: 10px;
-        min-width: 200px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-        display: none;
-    }
-    
-    .language-dropdown.show {
-        display: block;
-    }
-    
-    /* Interactive card styling */
-    .feature-card {
-        background: linear-gradient(135deg, #dc2626 0%, #1d4ed8 50%, #059669 100%);
-        border-radius: 15px;
-        padding: 25px;
-        margin: 10px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-        transition: all 0.3s ease;
-        border-left: 5px solid #ff6600;
-        color: white;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 24px rgba(0,0,0,0.6);
-        background: linear-gradient(135deg, #ef4444 0%, #3b82f6 50%, #10b981 100%);
-    }
-    
-    .feature-card h3 {
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        margin-bottom: 10px;
-    }
-    
-    .feature-card p {
-        color: white;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    }
-    
-    /* Welcome header */
-    .welcome-header {
-    font-size: 3.5rem;
-    color: white;
+/* Base App Styling */
+body, .stApp, [data-testid="stAppViewContainer"] {
+    background: linear-gradient(145deg, #0f172a, #1e293b) !important;
+    color: #f8fafc !important;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6, p, span, label, div {
+    color: #f1f5f9 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Input fields */
+input, textarea, select {
+    background-color: rgba(255,255,255,0.05) !important;
+    border: 1px solid #475569 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+/* Header / Welcome */
+.welcome-header {
+    font-size: 2.75rem;
+    font-weight: bold;
+    color: #f1f5f9;
     text-align: center;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    margin-top: 60px;
+    margin: 2rem 0;
+}
+
+/* Feature Cards */
+.feature-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 1rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+}
+
+/* Continue Button */
+.continue-button {
+    background: linear-gradient(135deg, #16a34a, #0ea5e9);
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 40px;
+    font-size: 1.1rem;
+    margin: 2rem auto;
+    display: block;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+}
+
+.continue-button:hover {
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, #22c55e, #3b82f6);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* Language Selector */
+.language-corner {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(30, 41, 59, 0.85);
+    color: white;
+    border-radius: 999px;
+    padding: 10px 20px;
+    z-index: 1000;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.language-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 10px;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 1rem;
+    min-width: 180px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.language-dropdown.show {
+    display: block;
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 768px) {
+    .welcome-header {
+        font-size: 2rem;
+        margin: 1.5rem 1rem;
     }
-    
-    /* Compact continue button */
+
+    .feature-card {
+        margin: 1rem 0.5rem;
+        padding: 1.5rem;
+    }
+
     .continue-button {
-        background: linear-gradient(135deg, #ff6600 0%, #ffffff 35%, #059669 100%);
-        border-radius: 25px;
-        padding: 15px 40px;
-        margin: 30px auto;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        transition: all 0.3s ease;
-        border: 2px solid #1d4ed8;
-        color: #1e3a8a;
-        font-weight: bold;
-        font-size: 1.2rem;
-        text-align: center;
-        cursor: pointer;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        display: inline-block;
-        max-width: 200px;
+        width: 90%;
+        font-size: 1rem;
+        padding: 0.8rem 1.5rem;
     }
-    
-    .continue-button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-        background: linear-gradient(135deg, #ff8533 0%, #f0f0f0 35%, #10b981 100%);
+
+    .language-corner {
+        top: 10px;
+        right: 10px;
+        padding: 8px 14px;
     }
-    
-    .continue-container {
-        text-align: center;
-        margin-top: 40px;
-    }
-    
-    /* Override Streamlit default text colors */
-    .stMarkdown, .stText, p {
-        color: white !important;
-    }
-    
-    /* Make section headers visible */
-    h1, h2, h3, h4, h5, h6 {
-        color: white !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-    }
-    
-    /* Hide Streamlit header */
-    header[data-testid="stHeader"] {
-        display: none;
-    }
+}
+
+/* Hide Streamlit header */
+header[data-testid="stHeader"] {
+    display: none;
+}
 </style>
 
 <script>
@@ -170,13 +162,13 @@ function toggleLanguageDropdown() {
 document.addEventListener('click', function(event) {
     const dropdown = document.querySelector('.language-dropdown');
     const toggle = document.querySelector('.language-corner');
-    
     if (!toggle.contains(event.target)) {
         dropdown.classList.remove('show');
     }
 });
 </script>
 """, unsafe_allow_html=True)
+
 
 # --- Supported languages ---
 indian_languages = {
@@ -1293,6 +1285,8 @@ elif option == "🏠 Home":
         {"name": "Medi Reminder ", "icon": "🧠", "description": "Medicine Reminder App", "port": 8506, "file": "app7.py"},
         {"name": "Mental wellness", "icon": "💊", "description": "Personalized Mental Wellness Coach.", "port": 8507, "file": "app6.py"},
         {"name": "LLM Settings", "icon": "🤖", "description": "LLM Settings to change and modify LLM on user requir...", "port": 8508, "file": "app5.py"},
+        {"name": "Translator app", "icon": "🏥", "description": "Translator with a 3rd party observer ", "port": 8510, "file": "app9.py"},
+
     ]
 
     # Custom CSS
