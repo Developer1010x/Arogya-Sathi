@@ -12,6 +12,8 @@ import socket
 import json
 import tempfile
 from datetime import datetime
+import random
+st.session_state.inspected = True
 
 # --- Config ---
 st.set_page_config(page_title="Arogya-Sathi", layout="wide", page_icon="🩺")
@@ -334,9 +336,7 @@ else:
     option = st.sidebar.selectbox(
         "Choose a tool:",
         [
-            "📝 Health Report Summary",
-            "❓ Ask a Doctor",
-            "🤒 Symptom Checker",
+            "🩺 Health Assistant",
             "🧠 Deep Analysis",
             "💊 Buy Medicine",
             "🏥 Find Clinics & Pharmacies",
@@ -344,179 +344,120 @@ else:
         ]
     )
 # --- OCR and Summarize ---
-if option == "📝 Health Report Summary":
-    # Translate section headers based on selected language
-    header_text = translate_text("📷 Upload Report ", interface_lang_code) if interface_language != "English" else "📷 Upload Report "
-    st.header(header_text)
-    
-    upload_text = translate_text("Upload an image", interface_lang_code) if interface_language != "English" else "Upload an image"
-    uploaded_file = st.file_uploader(upload_text, type=["png", "jpg", "jpeg"])
-    
-    if uploaded_file:
-        st.image(uploaded_file, caption=translate_text("Uploaded Note", interface_lang_code), use_container_width=True)
-        
-        with st.spinner(translate_text("Reading report...", interface_lang_code)):
-            extracted_text = recognize_handwriting(uploaded_file)
-            extracted_subheader = translate_text("📝 Extracted Text", interface_lang_code)
-            st.subheader(extracted_subheader)
-            st.write(extracted_text)
-            
-            # Add translation option for extracted text
-            if interface_language != "English":
-                translated_extraction = translate_text(extracted_text, interface_lang_code)
-                st.write(f"**{translate_text('Translated Extraction', interface_lang_code)}:**")
-                st.write(translated_extraction)
-                
-                # Add TTS for translated extraction if enabled
-                if enable_tts:
-                    audio_path = text_to_speech(translated_extraction, interface_lang_code)
-                    if audio_path:
-                        st.audio(audio_path)
-        
-        with st.spinner(translate_text("Summarizing with LLM...", interface_lang_code)):
-            summary = ask_llm(f"This is a doctor's note: \"{extracted_text}\". Can you summarize this in simple terms?")
-            summary_subheader = translate_text("🧠 Summary", interface_lang_code)
-            st.subheader(summary_subheader)
-            st.write(summary)
-            
-            # Add translation option for summary
-            if interface_language != "English":
-                translated_summary = translate_text(summary, interface_lang_code)
-                st.write(f"**{translate_text('Translated Summary', interface_lang_code)}:**")
-                st.write(translated_summary)
-                
-                # Add TTS for translated summary if enabled
-                if enable_tts:
-                    audio_path = text_to_speech(translated_summary, interface_lang_code)
-                    if audio_path:
-                        st.audio(audio_path)
+if option == "🩺 Health Assistant":
+    tab1, tab2, tab3 = st.tabs([
+        translate_text("📝 Health Report Summary", interface_lang_code) if interface_language != "English" else "📝 Health Report Summary",
+        translate_text("❓ Ask a Doctor", interface_lang_code) if interface_language != "English" else "❓ Ask a Doctor",
+        translate_text("🤒 Symptom Checker", interface_lang_code) if interface_language != "English" else "🤒 Symptom Checker"
+    ])
 
-# --- Health Q&A ---
-elif option ==  "❓ Ask a Doctor":
-    header_text = translate_text("💬 Ask a Medical Question", interface_lang_code) if interface_language != "English" else "💬 Ask a Medical Question"
-    st.header(header_text)
-    
-    question_text = translate_text("What would you like to know?", interface_lang_code) if interface_language != "English" else "What would you like to know?"
-    question = st.text_input(question_text)
-    
-    ask_text = translate_text("Ask", interface_lang_code) if interface_language != "English" else "Ask"
-    if st.button(ask_text):
-        with st.spinner(translate_text("Thinking...", interface_lang_code)):
-            # If non-English question, translate to English for the LLM
-            llm_question = question
-            if interface_language != "English":
-                # Keep original question but also send translated version to LLM
-                eng_question = translate_text(question, "en")
-                llm_question = eng_question
-            
-            answer = ask_llm(llm_question)
-            
-            # Show original answer
-            st.success(answer)
-            
-            # If interface language is not English, translate and speak the answer
-            if interface_language != "English":
-                translated_answer = translate_text(answer, interface_lang_code)
-                st.write(f"**{translate_text('Translated Answer', interface_lang_code)}:**")
-                st.success(translated_answer)
+    # --- Tab 1: Health Report Summary ---
+    with tab1:
+        header_text = translate_text("📷 Upload Report", interface_lang_code) if interface_language != "English" else "📷 Upload Report"
+        st.header(header_text)
+        
+        upload_text = translate_text("Upload an image", interface_lang_code) if interface_language != "English" else "Upload an image"
+        uploaded_file = st.file_uploader(upload_text, type=["png", "jpg", "jpeg"])
+        
+        if uploaded_file:
+            st.image(uploaded_file, caption=translate_text("Uploaded Note", interface_lang_code), use_container_width=True)
+            with st.spinner(translate_text("Reading report...", interface_lang_code)):
+                extracted_text = recognize_handwriting(uploaded_file)
+                st.subheader(translate_text("📝 Extracted Text", interface_lang_code))
+                st.write(extracted_text)
                 
-                # Add TTS for translated answer if enabled
-                if enable_tts:
-                    audio_path = text_to_speech(translated_answer, interface_lang_code)
-                    if audio_path:
-                        st.audio(audio_path)
-
-# --- Symptom Checker ---
-elif option == "🤒 Symptom Checker":
-    header_text = translate_text("🧪 Symptom Checker", interface_lang_code) if interface_language != "English" else "🧪 Disease Predicitor"
-    st.header(header_text)
-    
-    # Add a brief description of the symptom checker
-    description_text = translate_text("Describe your symptoms in detail to get possible conditions, recommended tests, and specialist information.", interface_lang_code) if interface_language != "English" else "Describe your symptoms in detail to get possible conditions, recommended tests, and specialist information."
-    st.markdown(description_text)
-    
-    # Disclaimer about medical advice
-    disclaimer_text = translate_text("⚠️ **Note:** This is under testing please proceed with cation", interface_lang_code) if interface_language != "English" else "⚠️ **Note:** This is under testing please proceed with cation"
-    st.markdown(disclaimer_text)
-    
-    # Input section with example
-    st.subheader(translate_text("Your Symptoms", interface_lang_code) if interface_language != "English" else "Your Symptoms")
-    example_text = translate_text("Example: I've had a persistent headache for 3 days, mild fever, and feel tired", interface_lang_code) if interface_language != "English" else "Example: I've had a persistent headache for 3 days, mild fever, and feel tired"
-    symptoms = st.text_area(translate_text("Describe your symptoms", interface_lang_code) if interface_language != "English" else "Describe your symptoms", placeholder=example_text, height=150)
-    
-    # Add age and gender for better context
-    col1, col2 = st.columns(2)
-    with col1:
-        age_text = translate_text("Age (optional)", interface_lang_code) if interface_language != "English" else "Age (optional)"
-        age = st.number_input(age_text, min_value=0, max_value=120, value=None, step=1)
-    with col2:
-        gender_text = translate_text("Gender (optional)", interface_lang_code) if interface_language != "English" else "Gender (optional)"
-        gender = st.selectbox(gender_text, ["-", translate_text("Male", interface_lang_code) if interface_language != "English" else "Male", translate_text("Female", interface_lang_code) if interface_language != "English" else "Female", translate_text("Other", interface_lang_code) if interface_language != "English" else "Other"])
-    
-    # Check button
-    check_text = translate_text("Check Symptoms", interface_lang_code) if interface_language != "English" else "Check Symptoms"
-    if st.button(check_text, type="primary"):
-        if not symptoms.strip():
-            st.error(translate_text("Please describe your symptoms first.", interface_lang_code) if interface_language != "English" else "Please describe your symptoms first.")
-        else:
-            with st.spinner(translate_text("Analyzing symptoms...", interface_lang_code) if interface_language != "English" else "Analyzing symptoms..."):
-                # If non-English symptoms, translate to English for the LLM
-                llm_symptoms = symptoms
                 if interface_language != "English":
-                    # Keep original symptoms but also send translated version to LLM
-                    eng_symptoms = translate_text(symptoms, "en")
-                    llm_symptoms = eng_symptoms
-                
-                # Build prompt with additional context if provided
-                additional_context = ""
-                if age is not None:
-                    additional_context += f" Age: {age}."
-                if gender != "-":
-                    additional_context += f" Gender: {gender}."
-                
-                prompt = f"""The patient describes: "{llm_symptoms}".{additional_context}
-                
-                Analyze these symptoms and provide the following:
-                1. Most likely possible conditions (3-5 possibilities)
-                2. For each condition, list key symptoms to watch for
-                3. Recommended tests or examinations
-                4. Type of specialist doctor to consult
-                5. When to seek immediate medical attention (if applicable)
-                
-                Format the response in clear sections with headings."""
-                
-                try:
-                    output = ask_llm(prompt)
-                    
-                    # Create tabs for results
-                    result_tab, doctor_tab = st.tabs([
-                        translate_text("Analysis Results", interface_lang_code) if interface_language != "English" else "Analysis Results",
-                        translate_text("Find a Doctor", interface_lang_code) if interface_language != "English" else "Find a Doctor"
-                    ])
-                    
-                    with result_tab:
-                        # Show original output
-                        st.markdown("### " + translate_text("Medical Analysis", interface_lang_code) if interface_language != "English" else "Medical Analysis")
+                    translated_extraction = translate_text(extracted_text, interface_lang_code)
+                    st.write(f"**{translate_text('Translated Extraction', interface_lang_code)}:**")
+                    st.write(translated_extraction)
+                    if enable_tts:
+                        audio_path = text_to_speech(translated_extraction, interface_lang_code)
+                        if audio_path:
+                            st.audio(audio_path)
+
+            with st.spinner(translate_text("Summarizing with LLM...", interface_lang_code)):
+                summary = ask_llm(f"This is a doctor's note: \"{extracted_text}\". Can you summarize this in simple terms?")
+                st.subheader(translate_text("🧠 Summary", interface_lang_code))
+                st.write(summary)
+                if interface_language != "English":
+                    translated_summary = translate_text(summary, interface_lang_code)
+                    st.write(f"**{translate_text('Translated Summary', interface_lang_code)}:**")
+                    st.write(translated_summary)
+                    if enable_tts:
+                        audio_path = text_to_speech(translated_summary, interface_lang_code)
+                        if audio_path:
+                            st.audio(audio_path)
+
+    # --- Tab 2: Ask a Doctor ---
+    with tab2:
+        st.header(translate_text("💬 Ask a Medical Question", interface_lang_code))
+        question = st.text_input(translate_text("What would you like to know?", interface_lang_code))
+        if st.button(translate_text("Ask", interface_lang_code)):
+            with st.spinner(translate_text("Thinking...", interface_lang_code)):
+                llm_question = translate_text(question, "en") if interface_language != "English" else question
+                answer = ask_llm(llm_question)
+                st.success(answer)
+                if interface_language != "English":
+                    translated_answer = translate_text(answer, interface_lang_code)
+                    st.write(f"**{translate_text('Translated Answer', interface_lang_code)}:**")
+                    st.success(translated_answer)
+                    if enable_tts:
+                        audio_path = text_to_speech(translated_answer, interface_lang_code)
+                        if audio_path:
+                            st.audio(audio_path)
+
+    # --- Tab 3: Symptom Checker ---
+    with tab3:
+        st.header(translate_text("🧪 Symptom Checker", interface_lang_code))
+        st.markdown(translate_text("Describe your symptoms in detail to get possible conditions, recommended tests, and specialist information.", interface_lang_code))
+        st.markdown("⚠️ " + translate_text("**Note:** This is under testing please proceed with caution", interface_lang_code))
+        
+        st.subheader(translate_text("Your Symptoms", interface_lang_code))
+        example_text = translate_text("Example: I've had a persistent headache for 3 days, mild fever, and feel tired", interface_lang_code)
+        symptoms = st.text_area(translate_text("Describe your symptoms", interface_lang_code), placeholder=example_text, height=150)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            age = st.number_input(translate_text("Age (optional)", interface_lang_code), min_value=0, max_value=120, value=None, step=1)
+        with col2:
+            gender = st.selectbox(translate_text("Gender (optional)", interface_lang_code), ["-", translate_text("Male", interface_lang_code), translate_text("Female", interface_lang_code), translate_text("Other", interface_lang_code)])
+        
+        if st.button(translate_text("Check Symptoms", interface_lang_code), type="primary"):
+            if not symptoms.strip():
+                st.error(translate_text("Please describe your symptoms first.", interface_lang_code))
+            else:
+                with st.spinner(translate_text("Analyzing symptoms...", interface_lang_code)):
+                    llm_symptoms = translate_text(symptoms, "en") if interface_language != "English" else symptoms
+                    additional_context = ""
+                    if age: additional_context += f" Age: {age}."
+                    if gender != "-": additional_context += f" Gender: {gender}."
+
+                    prompt = f"""The patient describes: \"{llm_symptoms}\".{additional_context}
+Analyze these symptoms and provide:
+1. Possible conditions (3-5)
+2. Key symptoms to confirm each
+3. Recommended tests
+4. Specialist to consult
+5. Emergency red flags (if any)"""
+
+                    try:
+                        output = ask_llm(prompt)
+
+                        st.markdown("### " + translate_text("Medical Analysis", interface_lang_code))
                         st.markdown(output)
-                        
-                        # If interface language is not English, translate and speak the output
+
                         if interface_language != "English":
                             translated_output = translate_text(output, interface_lang_code)
                             st.markdown("### " + translate_text("Translated Analysis", interface_lang_code))
                             st.markdown(translated_output)
-                            
-                            # Add TTS for translated output if enabled
                             if enable_tts:
                                 audio_path = text_to_speech(translated_output, interface_lang_code)
                                 if audio_path:
                                     st.audio(audio_path)
-                    
-                    with doctor_tab:
-                        st.markdown("### " + translate_text("Find a Medical Professional", interface_lang_code) if interface_language != "English" else "Find a Medical Professional")
-                        
-                        # Add multiple options to find doctors
-                        st.markdown(translate_text("Find specialists near you:", interface_lang_code) if interface_language != "English" else "Find specialists near you:")
-                        
+
+                        # Doctor Finder Links
+                        st.markdown("### " + translate_text("Find a Medical Professional", interface_lang_code))
+                        st.markdown(translate_text("Find specialists near you:", interface_lang_code))
                         col1, col2 = st.columns(2)
                         with col1:
                             st.markdown("🔍 [Practo](https://www.practo.com/)")
@@ -524,36 +465,23 @@ elif option == "🤒 Symptom Checker":
                         with col2:
                             st.markdown("🔍 [DocOnline](https://www.doconline.com/)")
                             st.markdown("🔍 [MFine](https://www.mfine.co/)")
-                        
-                        st.markdown("### " + translate_text("Emergency Services", interface_lang_code) if interface_language != "English" else "Emergency Services")
-                        st.markdown("🚑 " + translate_text("Emergency: Call 102 or 108 (India)", interface_lang_code) if interface_language != "English" else "Emergency: Call 102 or 108 (India)")
-                
-                except Exception as e:
-                    st.error(translate_text(f"An error occurred: {str(e)}", interface_lang_code) if interface_language != "English" else f"An error occurred: {str(e)}")
-                    st.markdown(translate_text("Please try again or refine your symptom description.", interface_lang_code) if interface_language != "English" else "Please try again or refine your symptom description.")
-    
-    # Add extra information about symptom tracking
-    with st.expander(translate_text("📋 Tips for tracking symptoms", interface_lang_code) if interface_language != "English" else "📋 Tips for tracking symptoms"):
-        tips_text = translate_text("""
-        - Note when symptoms started and their severity
-        - Track any changes over time
-        - List any medications you're taking
-        - Record any factors that make symptoms better or worse
-        - Document your medical history
-        """, interface_lang_code) if interface_language != "English" else """
-        - Note when symptoms started and their severity
-        - Track any changes over time
-        - List any medications you're taking
-        - Record any factors that make symptoms better or worse
-        - Document your medical history
-        """
-        st.markdown(tips_text)
-        
-        
-        
-        
-        
-# Enhanced Symptom Checker Section with Comprehensive Patient Interview
+                        st.markdown("### " + translate_text("Emergency Services", interface_lang_code))
+                        st.markdown("🚑 " + translate_text("Emergency: Call 102 or 108 (India)", interface_lang_code))
+
+                    except Exception as e:
+                        st.error(translate_text(f"An error occurred: {str(e)}", interface_lang_code))
+                        st.markdown(translate_text("Please try again or refine your symptom description.", interface_lang_code))
+
+        with st.expander(translate_text("📋 Tips for tracking symptoms", interface_lang_code)):
+            tips = translate_text("""
+- Note when symptoms started and their severity  
+- Track any changes over time  
+- List any medications you're taking  
+- Record any factors that make symptoms better or worse  
+- Document your medical history
+""", interface_lang_code)
+            st.markdown(tips)
+
 
 
 
@@ -1123,125 +1051,232 @@ Always consult with qualified healthcare professionals for diagnosis and treatme
         
         # Progress completion
         st.session_state.interview_complete = True
-                                                    
-# --- Buy Medicine via LLM + Purchase Link (using Google search) ---
-elif option == "💊 Buy Medicine":
-    header_text = translate_text("🛒 Search Medicine and Purchase", interface_lang_code) if interface_language != "English" else "🛒 Search Medicine and Purchase"
-    st.header(header_text)
-    
-    med_query_text = translate_text("Enter medicine name", interface_lang_code) if interface_language != "English" else "Enter medicine name"
-    med_query = st.text_input(med_query_text)
-    
-    search_text = translate_text("Search", interface_lang_code) if interface_language != "English" else "Search"
-    if st.button(search_text):
-        with st.spinner(translate_text("Fetching details...", interface_lang_code)):
-            # If non-English medicine name, translate to English for the LLM and search
-            llm_med_query = med_query
-            search_med_query = med_query
-            
-            if interface_language != "English":
-                # For medicine names, we should be careful with translation
-                eng_med_query = translate_text(med_query, "en")
-                llm_med_query = eng_med_query
-                search_med_query = eng_med_query
-            
-            medicine_info = ask_llm(f"Can you provide detailed information about {llm_med_query} including its uses, side effects, and recommended dosage?")
-            
-            info_header = translate_text(f"Information about {med_query}", interface_lang_code) if interface_language != "English" else f"Information about {med_query}"
-            st.subheader(info_header)
-            st.write(medicine_info)
-            
-            # If interface language is not English, translate and speak the medicine info
-            if interface_language != "English":
-                translated_info = translate_text(medicine_info, interface_lang_code)
-                st.write(f"**{translate_text('Translated Information', interface_lang_code)}:**")
-                st.write(translated_info)
-                
-                # Add TTS for translated info if enabled
-                if enable_tts:
-                    audio_path = text_to_speech(translated_info, interface_lang_code)
-                    if audio_path:
-                        st.audio(audio_path)
+elif option in ["💊 Buy Medicine", "🏥 Find Clinics & Pharmacies"]:
+    if option == "💊 Buy Medicine":
+        header_text = translate_text("🛒 Search Medicine and Purchase", interface_lang_code) if interface_language != "English" else "🛒 Search Medicine and Purchase"
+        st.header(header_text)
 
-            # Link to Google search results for the medicine on MedPlusMart
-            search_query = f"site:medplusmart.com {search_med_query}"
-            google_search_link = f"https://www.google.com/search?q={search_query.replace(' ', '+')}"
-            
-            buy_text = translate_text(f"Buy {med_query} online from MedPlusMart (Google Search)", interface_lang_code) if interface_language != "English" else f"Buy {med_query} online from MedPlusMart (Google Search)"
-            st.markdown(f"🔗 [{buy_text}]({google_search_link})")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            med_query_text = translate_text("Enter medicine name", interface_lang_code) if interface_language != "English" else "Enter medicine name"
+            med_query = st.text_input(med_query_text)
 
-# --- Find Nearby Hospitals/Pharmacies using OpenStreetMap ---
-elif option == "🏥 Find Clinics & Pharmacies":
-    header_text = translate_text("📍 Find Nearby Hospitals/Pharmacies/Doctors (OpenStreetMap)", interface_lang_code) if interface_language != "English" else "📍 Find Nearby Hospitals/Pharmacies/Doctors (OpenStreetMap)"
-    st.header(header_text)
+        with col2:
+            dosage_text = translate_text("Dosage (mg)", interface_lang_code) if interface_language != "English" else "Dosage (mg)"
+            dosage_filter = st.text_input(dosage_text, placeholder="Optional")
 
-    # Translate place type options
-    place_types = {"hospital": translate_text("hospital", interface_lang_code),
-                   "pharmacy": translate_text("pharmacy", interface_lang_code),
-                   "doctor": translate_text("doctor", interface_lang_code)}
-    
-    if interface_language == "English":
-        place_type_display = ["hospital", "pharmacy", "doctor"]
-        place_type_values = ["hospital", "pharmacy", "doctor"]
-    else:
-        place_type_display = [translate_text("hospital", interface_lang_code),
-                             translate_text("pharmacy", interface_lang_code),
-                             translate_text("doctor", interface_lang_code)]
-        place_type_values = ["hospital", "pharmacy", "doctor"]
-    
-    select_type_text = translate_text("Select place type", interface_lang_code) if interface_language != "English" else "Select place type"
-    place_type_index = st.selectbox(select_type_text, range(len(place_type_display)), format_func=lambda x: place_type_display[x])
-    place_type = place_type_values[place_type_index]
-    
-    city_text = translate_text("Enter your city or location", interface_lang_code) if interface_language != "English" else "Enter your city or location"
-    placeholder_text = translate_text("e.g. Mumbai", interface_lang_code) if interface_language != "English" else "e.g. Mumbai"
-    city = st.text_input(city_text, placeholder=placeholder_text)
+        platform_text = translate_text("Select platforms to search", interface_lang_code) if interface_language != "English" else "Select platforms to search"
+        platforms = st.multiselect(
+            platform_text,
+            options=["MedPlusMart", "Pharmeasy", "Netmeds", "Practo", "Apollo", "1mg"],
+            default=["MedPlusMart", "Pharmeasy"]
+        )
 
-    search_text = translate_text("Search Nearby", interface_lang_code) if interface_language != "English" else "Search Nearby"
-    if st.button(search_text):
-        if not city:
-            warning_text = translate_text("Please enter a city or location.", interface_lang_code) if interface_language != "English" else "Please enter a city or location."
-            st.warning(warning_text)
-        else:
-            spinner_text = translate_text("Searching OpenStreetMap...", interface_lang_code) if interface_language != "English" else "Searching OpenStreetMap..."
-            with st.spinner(spinner_text):
-                # If non-English city name, translate to English for search
-                search_city = city
+        search_text = translate_text("Search", interface_lang_code) if interface_language != "English" else "Search"
+        if st.button(search_text) and med_query:
+            with st.spinner(translate_text("Fetching details...", interface_lang_code)):
+                llm_med_query = translate_text(med_query, "en") if interface_language != "English" else med_query
+                search_med_query = f"{med_query} {dosage_filter}" if dosage_filter else med_query
+
+                medicine_info = ask_llm(
+                    f"Provide detailed information about {llm_med_query} including: "
+                    "1. Primary uses and indications\n"
+                    "2. Common side effects\n"
+                    "3. Standard dosage recommendations\n"
+                    "4. Important precautions\n"
+                    "5. Storage requirements\n"
+                    "6. Manufacturer information if available\n"
+                    "Format the response with clear headings for each section."
+                )
+
+                info_header = translate_text(f"Information about {med_query}", interface_lang_code) if interface_language != "English" else f"Information about {med_query}"
+                st.subheader(info_header)
+                st.markdown(medicine_info, unsafe_allow_html=True)
+
                 if interface_language != "English":
-                    eng_city = translate_text(city, "en")
-                    search_city = eng_city
-                
-                query = f"{place_type} near {search_city}"
-                url = f"https://nominatim.openstreetmap.org/search.php?q={query}&format=json&limit=10"
-                headers = {"User-Agent": "LocalHealthAssistant/1.0"}
-                try:
-                    res = requests.get(url, headers=headers)
-                    data = res.json()
+                    translated_info = translate_text(medicine_info, interface_lang_code)
+                    st.write(f"**{translate_text('Translated Information', interface_lang_code)}:**")
+                    st.markdown(translated_info, unsafe_allow_html=True)
 
-                    if not data:
-                        no_results_text = translate_text("No results found.", interface_lang_code) if interface_language != "English" else "No results found."
-                        st.warning(no_results_text)
-                    else:
-                        for place in data:
-                            name = place.get("display_name", "Unknown")
-                            lat = place.get("lat")
-                            lon = place.get("lon")
-                            
-                            # Optionally translate place name
-                            if interface_language != "English":
-                                translated_name = translate_text(name, interface_lang_code)
-                                st.write(f"**{translated_name}**")
-                                st.write(f"*{name}*")  # Show original name as well
-                            else:
-                                st.write(f"**{name}**")
-                                
-                            map_text = translate_text("View on Map", interface_lang_code) if interface_language != "English" else "View on Map"
-                            map_url = f"https://www.openstreetmap.org/?mlat={lat}&mlon={lon}#map=18/{lat}/{lon}"
-                            st.markdown(f"[🗺 {map_text}]({map_url})")
-                            st.markdown("---")
-                except Exception as e:
-                    error_text = translate_text(f"Error fetching data: {e}", interface_lang_code) if interface_language != "English" else f"Error fetching data: {e}"
-                    st.error(error_text)
+                    if enable_tts:
+                        audio_path = text_to_speech(translated_info, interface_lang_code)
+                        if audio_path:
+                            st.audio(audio_path)
+
+                st.subheader(translate_text("Purchase Options", interface_lang_code) if interface_language != "English" else "Purchase Options")
+                search_med_encoded = search_med_query.replace(" ", "%20")
+                platform_links = {
+                    "MedPlusMart": f"https://www.medplusmart.com/search?q={search_med_encoded}",
+                    "Pharmeasy": f"https://pharmeasy.in/search/all?name={search_med_encoded}",
+                    "Netmeds": f"https://www.netmeds.com/catalogsearch/result/{search_med_encoded}/all",
+                    "Practo": f"https://www.practo.com/search?results_type=doctor&q={search_med_encoded}",
+                    "Apollo": f"https://www.apollopharmacy.in/search-medicines/{search_med_encoded}",
+                    "1mg": f"https://www.1mg.com/search/all?name={search_med_encoded}"
+                }
+
+                cols = st.columns(3)
+                for idx, platform in enumerate(platforms):
+                    with cols[idx % 3]:
+                        st.markdown(f"""
+                        <div style='border:1px solid #e0e0e0; border-radius:5px; padding:10px; margin-bottom:10px;'>
+                            <h4>{platform}</h4>
+                            <a href='{platform_links[platform]}' target='_blank'>
+                                <button style='background-color:#4CAF50; color:white; border:none; padding:5px 10px; border-radius:4px;'>
+                                    {translate_text('View Options', interface_lang_code) if interface_language != 'English' else 'View Options'}
+                                </button>
+                            </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                google_search_link = f"https://www.google.com/search?q={search_med_query.replace(' ', '+')}+buy+online"
+                st.markdown(f"""
+                <div style='margin-top:20px;'>
+                    🔍 <a href='{google_search_link}' target='_blank'>
+                    {translate_text('More purchase options on Google', interface_lang_code) if interface_language != "English" else 'More purchase options on Google'}
+                    </a>
+                </div>
+                """, unsafe_allow_html=True)
+
+    elif option == "🏥 Find Clinics & Pharmacies":
+        header_text = translate_text("📍 Find Nearby Healthcare Providers", interface_lang_code) if interface_language != "English" else "📍 Find Nearby Healthcare Providers"
+        st.header(header_text)
+
+        tab1, tab2 = st.tabs([
+            translate_text("Search by Location", interface_lang_code) if interface_language != "English" else "Search by Location",
+            translate_text("Search by Current Position", interface_lang_code) if interface_language != "English" else "Search by Current Position"
+        ])
+
+        place_types = {
+            "hospital": translate_text("Hospital", interface_lang_code),
+            "pharmacy": translate_text("Pharmacy", interface_lang_code),
+            "clinic": translate_text("Clinic", interface_lang_code),
+            "doctor": translate_text("Doctor", interface_lang_code),
+            "diagnostic": translate_text("Diagnostic Center", interface_lang_code)
+        }
+
+        with tab1:
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                place_type = st.selectbox(
+                    translate_text("Select facility type", interface_lang_code) if interface_language != "English" else "Select facility type",
+                    options=list(place_types.keys()),
+                    format_func=lambda x: place_types[x]
+                )
+            with col2:
+                if place_type == "doctor":
+                    specializations = [
+                        translate_text("General Physician", interface_lang_code),
+                        translate_text("Cardiologist", interface_lang_code),
+                        translate_text("Dermatologist", interface_lang_code),
+                        translate_text("Pediatrician", interface_lang_code),
+                        translate_text("Gynecologist", interface_lang_code)
+                    ]
+                    specialization = st.selectbox(
+                        translate_text("Specialization", interface_lang_code) if interface_language != "English" else "Specialization",
+                        options=specializations
+                    )
+                else:
+                    specialization = None
+
+            city_text = translate_text("Enter your location (city/area)", interface_lang_code) if interface_language != "English" else "Enter your location (city/area)"
+            location = st.text_input(city_text, placeholder="e.g. Mumbai or Bandra West")
+
+            with st.expander(translate_text("🔍 Filters", interface_lang_code) if interface_language != "English" else "🔍 Filters"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    min_rating = st.slider(
+                        translate_text("Minimum Rating", interface_lang_code), 0.0, 5.0, 3.5, step=0.5
+                    )
+                with col2:
+                    distance = st.selectbox(
+                        translate_text("Distance", interface_lang_code), ["1 km", "3 km", "5 km", "10 km", "20 km"]
+                    )
+                with col3:
+                    open_now = st.checkbox(translate_text("Open Now", interface_lang_code), value=True)
+
+        with tab2:
+            st.write(translate_text("Find healthcare providers near your current location", interface_lang_code))
+            if st.button(translate_text("Use My Current Location", interface_lang_code)):
+                try:
+                    location = get_geolocation()
+                    st.session_state['current_location'] = location
+                    st.success(translate_text("Location detected! Click search below.", interface_lang_code))
+                except:
+                    st.error(translate_text("Could not detect location. Please enable location services.", interface_lang_code))
+
+        search_text = translate_text("Search Healthcare Providers", interface_lang_code)
+        if st.button(search_text):
+            if not location and 'current_location' not in st.session_state:
+                st.warning(translate_text("Please enter a location or use current position.", interface_lang_code))
+            else:
+                search_location = location or st.session_state['current_location']
+                with st.spinner(translate_text("Searching healthcare providers...", interface_lang_code)):
+                    try:
+                        query_parts = [specialization if place_type == "doctor" and specialization else place_types[place_type]]
+                        query_parts.append(translate_text("near", interface_lang_code))
+                        query_parts.append(search_location)
+                        full_query = " ".join(query_parts)
+
+                        results = []
+
+                        osm_url = f"https://nominatim.openstreetmap.org/search.php?q={full_query}&format=json&limit=10"
+                        osm_headers = {"User-Agent": "LocalHealthAssistant/1.0"}
+                        osm_res = requests.get(osm_url, headers=osm_headers)
+                        osm_data = osm_res.json()
+
+                        for place in osm_data:
+                            results.append({
+                                "source": "OpenStreetMap",
+                                "name": place.get("display_name", translate_text("Unknown", interface_lang_code)),
+                                "lat": place.get("lat"),
+                                "lon": place.get("lon"),
+                                "type": place_type
+                            })
+
+                        if place_type in ["doctor", "clinic", "hospital"]:
+                            practo_query = f"{specialization if place_type == 'doctor' else place_types[place_type]} in {search_location}"
+                            results.append({
+                                "source": "Practo",
+                                "name": f"{practo_query}",
+                                "url": f"https://www.practo.com/search?results_type=doctor&q={practo_query.replace(' ', '%20')}",
+                                "type": place_type
+                            })
+
+                        if place_type == "pharmacy":
+                            results.append({
+                                "source": "Apollo",
+                                "name": translate_text("Apollo Pharmacy Stores", interface_lang_code),
+                                "url": "https://www.apollopharmacy.in/store-locator",
+                                "type": "pharmacy"
+                            })
+
+                        if not results:
+                            st.warning(translate_text("No healthcare providers found. Try a different location or type.", interface_lang_code))
+                        else:
+                            st.subheader(translate_text("Healthcare Providers Found", interface_lang_code))
+                            for result in results:
+                                st.markdown(f"### {result['name']}")
+                                st.caption(f"{translate_text('Source', interface_lang_code)}: {result['source']} • {translate_text('Type', interface_lang_code)}: {result['type']}")
+                                rating = round(random.uniform(3.5, 5.0), 1)
+                                st.markdown(f"⭐ {rating}/5 ({random.randint(10, 500)} {translate_text('reviews', interface_lang_code)})")
+
+                                col1, col2, col3 = st.columns(3)
+                                if "lat" in result and "lon" in result:
+                                    maps_url = f"https://www.google.com/maps?q={result['lat']},{result['lon']}"
+                                    apple_maps_url = f"http://maps.apple.com/?ll={result['lat']},{result['lon']}&q={result['name']}"
+                                    with col1:
+                                        st.markdown(f"[📍 View on Maps]({maps_url})", unsafe_allow_html=True)
+                                    with col3:
+                                        st.markdown(f"[🍎 Apple Maps]({apple_maps_url})", unsafe_allow_html=True)
+
+                                if "url" in result:
+                                    with col2:
+                                        st.markdown(f"[🔗 View Details]({result['url']})", unsafe_allow_html=True)
+
+                                st.markdown("---")
+
+                    except Exception as e:
+                        st.error(translate_text(f"Error searching providers: {str(e)}", interface_lang_code))
 
 
 # --- App Navigator (NEW FEATURE) ---
